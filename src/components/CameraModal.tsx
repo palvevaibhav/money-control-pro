@@ -3,7 +3,7 @@ import Webcam from 'react-webcam';
 import { Camera, X, RefreshCw, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeReceipt } from '../lib/ai';
-import { storage } from '../lib/storage';
+import { createEntityId, storage } from '../lib/storage';
 import { Transaction } from '../types';
 import { auth } from '../lib/firebase';
 
@@ -38,7 +38,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({ isOpen, onClose, onSuc
 
       if (result) {
         const newTx: Transaction = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: createEntityId('tx'),
           uid: auth.currentUser.uid,
           amount: result.amount,
           category: result.category,

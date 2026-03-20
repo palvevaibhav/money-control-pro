@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { User } from 'firebase/auth';
+import { motion, AnimatePresence } from 'motion/react';
+import { Battery, Signal, Wifi } from 'lucide-react';
 import { auth, onAuthStateChanged } from './lib/firebase';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
@@ -12,17 +15,16 @@ import { ProfilePage } from './components/ProfilePage';
 import { NotificationsPage } from './components/NotificationsPage';
 import { NotificationSystem } from './components/NotificationSystem';
 import { SplashScreen } from './components/SplashScreen';
-import { motion, AnimatePresence } from 'motion/react';
-import { Wifi, Signal, Battery } from 'lucide-react';
 
 const StatusBar = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = window.setInterval(() => {
       setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }, 1000);
-    return () => clearInterval(timer);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -40,14 +42,15 @@ const StatusBar = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showSplash, setShowSplash] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -72,14 +75,22 @@ export default function App() {
 
   const renderPage = () => {
     switch (activeTab) {
-      case 'home': return <Dashboard setActiveTab={setActiveTab} />;
-      case 'expenses': return <ExpensesPage />;
-      case 'aidna': return <AIDNAPage setActiveTab={setActiveTab} />;
-      case 'chat': return <SovereignAIChat />;
-      case 'vault': return <VaultPage />;
-      case 'profile': return <ProfilePage />;
-      case 'notifications': return <NotificationsPage />;
-      default: return <Dashboard setActiveTab={setActiveTab} />;
+      case 'home':
+        return <Dashboard setActiveTab={setActiveTab} />;
+      case 'expenses':
+        return <ExpensesPage />;
+      case 'aidna':
+        return <AIDNAPage setActiveTab={setActiveTab} />;
+      case 'chat':
+        return <SovereignAIChat />;
+      case 'vault':
+        return <VaultPage />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'notifications':
+        return <NotificationsPage />;
+      default:
+        return <Dashboard setActiveTab={setActiveTab} />;
     }
   };
 
@@ -92,7 +103,7 @@ export default function App() {
       <StatusBar />
       <Header setActiveTab={setActiveTab} />
       <NotificationSystem />
-      
+
       <div className="scroll-container">
         <AnimatePresence mode="wait">
           <motion.div
@@ -100,7 +111,7 @@ export default function App() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="px-6 py-4"
           >
             {renderPage()}

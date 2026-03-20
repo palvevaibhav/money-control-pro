@@ -12,9 +12,9 @@ export const LoginPage = () => {
     setError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Failed to sign in with Google");
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to sign in with Google');
     } finally {
       setLoading(false);
     }
