@@ -3,6 +3,8 @@ import Webcam from 'react-webcam';
 import { Camera, ImagePlus, X, RefreshCw, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeReceipt } from '../lib/ai';
+import { createEntityId, storage } from '../lib/storage';
+import { Transaction } from '../types';
 import { auth } from '../lib/firebase';
 import { createEntityId, storage } from '../lib/storage';
 import { isNativePlatform } from '../lib/native';

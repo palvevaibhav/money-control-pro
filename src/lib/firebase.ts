@@ -4,7 +4,6 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
 } from 'firebase/auth';
 import {
@@ -70,7 +69,6 @@ export {
   query,
   setDoc,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   updateDoc,
   where,

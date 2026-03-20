@@ -9,42 +9,16 @@ const STORAGE_KEYS = {
   STATS: 'mcp_stats',
   SETTINGS: 'mcp_settings',
   NOTIFICATIONS: 'mcp_notifications',
-  SECURITY_PREFERENCES: 'mcp_security_preferences',
 } as const;
 
 const STORAGE_SYNC_EVENT = 'mcp:storage-sync';
-const TRACKED_USER_KEYS = new Set<string>([
-  STORAGE_KEYS.TRANSACTIONS,
-  STORAGE_KEYS.GOALS,
-  STORAGE_KEYS.LENDING,
-  STORAGE_KEYS.STATS,
-  STORAGE_KEYS.NOTIFICATIONS,
-]);
 
 export interface AppSettings {
   currency: 'USD' | 'INR' | 'DUAL';
 }
 
-export interface SecurityPreferences {
-  biometricLockEnabled: boolean;
-  pinLockEnabled: boolean;
-  encryptionEnabled: boolean;
-  integrityShieldEnabled: boolean;
-  publicKeyFingerprint?: string;
-  keyPairCreatedAt?: string;
-  lastSealAt?: string;
-  lastIntegrityCheckAt?: string;
-}
-
 const DEFAULT_SETTINGS: AppSettings = {
   currency: 'DUAL',
-};
-
-const DEFAULT_SECURITY_PREFERENCES: SecurityPreferences = {
-  biometricLockEnabled: false,
-  pinLockEnabled: false,
-  encryptionEnabled: false,
-  integrityShieldEnabled: false,
 };
 
 const DEFAULT_STATS: UserStats = {
@@ -82,29 +56,19 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-function emitStorageSync() {
+function writeJson(key: string, value: unknown) {
   if (!isBrowser()) return;
-  window.dispatchEvent(new CustomEvent(STORAGE_SYNC_EVENT));
+  window.localStorage.setItem(key, JSON.stringify(value));
+  emitStorageSync();
 }
 
 function getCurrentUid() {
   return auth.currentUser?.uid;
 }
 
-function trackIntegrityIfNeeded(key: string) {
-  if (!TRACKED_USER_KEYS.has(key)) return;
-  if (!storage.getSecurityPreferences().integrityShieldEnabled) return;
-
-  queueMicrotask(() => {
-    void appendIntegrityEvent(key);
-  });
-}
-
-function writeJson(key: string, value: unknown) {
+function emitStorageSync() {
   if (!isBrowser()) return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-  trackIntegrityIfNeeded(key);
-  emitStorageSync();
+  window.dispatchEvent(new CustomEvent(STORAGE_SYNC_EVENT));
 }
 
 function createId(prefix: string) {
@@ -135,12 +99,6 @@ export const storage = {
   getSettings: (): AppSettings => readJson(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS),
   saveSettings: (settings: AppSettings) => {
     writeJson(STORAGE_KEYS.SETTINGS, settings);
-  },
-
-  getSecurityPreferences: (): SecurityPreferences =>
-    readJson(STORAGE_KEYS.SECURITY_PREFERENCES, DEFAULT_SECURITY_PREFERENCES),
-  saveSecurityPreferences: (preferences: SecurityPreferences) => {
-    writeJson(STORAGE_KEYS.SECURITY_PREFERENCES, preferences);
   },
 
   getTransactions: (): Transaction[] => {
@@ -300,11 +258,6 @@ export const storage = {
     const statsMap = readJson<Record<string, UserStats>>(STORAGE_KEYS.STATS, {});
     delete statsMap[uid];
     writeJson(STORAGE_KEYS.STATS, statsMap);
-
-    window.localStorage.removeItem(STORAGE_KEYS.SECURITY_PREFERENCES);
-    queueMicrotask(() => {
-      void clearSecurityArtifactsForCurrentUser(uid);
-    });
   },
   clearAllData: () => {
     if (!isBrowser()) return;

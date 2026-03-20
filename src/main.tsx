@@ -4,9 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { initializeNativeShell, isNativePlatform } from './lib/native';
 
-void initializeNativeShell();
-
-if ('serviceWorker' in navigator && import.meta.env.PROD && !isNativePlatform()) {
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn('Service worker registration failed:', error);

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowUpRight,
   Brain,
@@ -13,13 +13,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { CameraModal } from './CameraModal';
 import { formatDualCurrency } from '../lib/currency';
 import { storage, subscribeToStorageSync } from '../lib/storage';
 import { Transaction, UserStats } from '../types';
-
-const CameraModal = lazy(() =>
-  import('./CameraModal').then((module) => ({ default: module.CameraModal })),
-);
 
 interface DashboardProps {
   setActiveTab: (tab: string) => void;
@@ -159,15 +156,7 @@ export const Dashboard = ({ setActiveTab }: DashboardProps) => {
           <span className="text-[9px] font-black uppercase tracking-widest text-center">Scan Receipt</span>
         </button>
 
-        {isCameraOpen && (
-          <Suspense fallback={null}>
-            <CameraModal
-              isOpen={isCameraOpen}
-              onClose={() => setIsCameraOpen(false)}
-              onSuccess={() => setIsCameraOpen(false)}
-            />
-          </Suspense>
-        )}
+        <CameraModal isOpen={isCameraOpen} onClose={() => setIsCameraOpen(false)} onSuccess={() => setIsCameraOpen(false)} />
         <button
           onClick={() => setActiveTab('aidna')}
           className="bg-primary p-4 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-[0_10px_20px_rgba(68,243,169,0.2)] active:scale-95 transition-all"

@@ -10,30 +10,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'motion'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          ai: ['@google/genai', 'react-markdown'],
-          capacitor: [
-            '@capacitor/app',
-            '@capacitor/browser',
-            '@capacitor/camera',
-            '@capacitor/core',
-            '@capacitor/haptics',
-            '@capacitor/keyboard',
-            '@capacitor/status-bar',
-            'capacitor-biometric-authentication',
-          ],
-          charts: ['recharts'],
-          media: ['react-webcam', 'canvas-confetti'],
-          icons: ['lucide-react'],
-        },
-      },
-    },
-  },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
   },

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { Battery, Signal, Wifi } from 'lucide-react';
@@ -8,36 +8,6 @@ import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { NotificationSystem } from './components/NotificationSystem';
 import { SplashScreen } from './components/SplashScreen';
-import { AppLockGate } from './components/AppLockGate';
-import { SecurityPreferences, storage, subscribeToStorageSync } from './lib/storage';
-
-const Dashboard = lazy(() =>
-  import('./components/Dashboard').then((module) => ({ default: module.Dashboard })),
-);
-const ExpensesPage = lazy(() =>
-  import('./components/ExpensesPage').then((module) => ({ default: module.ExpensesPage })),
-);
-const AIDNAPage = lazy(() =>
-  import('./components/AIDNAPage').then((module) => ({ default: module.AIDNAPage })),
-);
-const SovereignAIChat = lazy(() =>
-  import('./components/SovereignAIChat').then((module) => ({ default: module.SovereignAIChat })),
-);
-const VaultPage = lazy(() =>
-  import('./components/VaultPage').then((module) => ({ default: module.VaultPage })),
-);
-const ProfilePage = lazy(() =>
-  import('./components/ProfilePage').then((module) => ({ default: module.ProfilePage })),
-);
-const NotificationsPage = lazy(() =>
-  import('./components/NotificationsPage').then((module) => ({ default: module.NotificationsPage })),
-);
-
-const PageSkeleton = () => (
-  <div className="min-h-[50vh] flex items-center justify-center">
-    <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-  </div>
-);
 
 const StatusBar = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -110,6 +80,8 @@ export default function App() {
 
   const page = useMemo(() => {
     switch (activeTab) {
+      case 'home':
+        return <Dashboard setActiveTab={setActiveTab} />;
       case 'expenses':
         return <ExpensesPage />;
       case 'aidna':
@@ -122,7 +94,6 @@ export default function App() {
         return <ProfilePage />;
       case 'notifications':
         return <NotificationsPage />;
-      case 'home':
       default:
         return <Dashboard setActiveTab={setActiveTab} />;
     }
@@ -137,7 +108,6 @@ export default function App() {
       <StatusBar />
       <Header setActiveTab={setActiveTab} />
       <NotificationSystem />
-      <AppLockGate enabled={Boolean(user && securityPreferences.biometricLockEnabled)} />
 
       <div className="scroll-container">
         <AnimatePresence mode="wait">
