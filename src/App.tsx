@@ -1,28 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { User } from 'firebase/auth';
+import { motion, AnimatePresence } from 'motion/react';
+import { Battery, Signal, Wifi } from 'lucide-react';
 import { auth, onAuthStateChanged } from './lib/firebase';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
-import { Dashboard } from './components/Dashboard';
-import { ExpensesPage } from './components/ExpensesPage';
-import { AIDNAPage } from './components/AIDNAPage';
-import { SovereignAIChat } from './components/SovereignAIChat';
-import { VaultPage } from './components/VaultPage';
-import { ProfilePage } from './components/ProfilePage';
-import { NotificationsPage } from './components/NotificationsPage';
 import { NotificationSystem } from './components/NotificationSystem';
 import { SplashScreen } from './components/SplashScreen';
-import { motion, AnimatePresence } from 'motion/react';
-import { Wifi, Signal, Battery } from 'lucide-react';
+import { AppLockGate } from './components/AppLockGate';
+import { SecurityPreferences, storage, subscribeToStorageSync } from './lib/storage';
+
+const Dashboard = lazy(() =>
+  import('./components/Dashboard').then((module) => ({ default: module.Dashboard })),
+);
+const ExpensesPage = lazy(() =>
+  import('./components/ExpensesPage').then((module) => ({ default: module.ExpensesPage })),
+);
+const AIDNAPage = lazy(() =>
+  import('./components/AIDNAPage').then((module) => ({ default: module.AIDNAPage })),
+);
+const SovereignAIChat = lazy(() =>
+  import('./components/SovereignAIChat').then((module) => ({ default: module.SovereignAIChat })),
+);
+const VaultPage = lazy(() =>
+  import('./components/VaultPage').then((module) => ({ default: module.VaultPage })),
+);
+const ProfilePage = lazy(() =>
+  import('./components/ProfilePage').then((module) => ({ default: module.ProfilePage })),
+);
+const NotificationsPage = lazy(() =>
+  import('./components/NotificationsPage').then((module) => ({ default: module.NotificationsPage })),
+);
+
+const PageSkeleton = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+  </div>
+);
 
 const StatusBar = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = window.setInterval(() => {
       setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }, 1000);
-    return () => clearInterval(timer);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -40,15 +65,28 @@ const StatusBar = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showSplash, setShowSplash] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [securityPreferences, setSecurityPreferences] = useState<SecurityPreferences>(
+    storage.getSecurityPreferences(),
+  );
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
       setLoading(false);
     });
+
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const syncSecurityPreferences = () => {
+      setSecurityPreferences(storage.getSecurityPreferences());
+    };
+
+    syncSecurityPreferences();
+    return subscribeToStorageSync(syncSecurityPreferences);
   }, []);
 
   if (loading) {
@@ -70,18 +108,25 @@ export default function App() {
     );
   }
 
-  const renderPage = () => {
+  const page = useMemo(() => {
     switch (activeTab) {
-      case 'home': return <Dashboard setActiveTab={setActiveTab} />;
-      case 'expenses': return <ExpensesPage />;
-      case 'aidna': return <AIDNAPage setActiveTab={setActiveTab} />;
-      case 'chat': return <SovereignAIChat />;
-      case 'vault': return <VaultPage />;
-      case 'profile': return <ProfilePage />;
-      case 'notifications': return <NotificationsPage />;
-      default: return <Dashboard setActiveTab={setActiveTab} />;
+      case 'expenses':
+        return <ExpensesPage />;
+      case 'aidna':
+        return <AIDNAPage setActiveTab={setActiveTab} />;
+      case 'chat':
+        return <SovereignAIChat />;
+      case 'vault':
+        return <VaultPage />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'notifications':
+        return <NotificationsPage />;
+      case 'home':
+      default:
+        return <Dashboard setActiveTab={setActiveTab} />;
     }
-  };
+  }, [activeTab]);
 
   return (
     <div className="app-container">
@@ -92,7 +137,8 @@ export default function App() {
       <StatusBar />
       <Header setActiveTab={setActiveTab} />
       <NotificationSystem />
-      
+      <AppLockGate enabled={Boolean(user && securityPreferences.biometricLockEnabled)} />
+
       <div className="scroll-container">
         <AnimatePresence mode="wait">
           <motion.div
@@ -100,10 +146,10 @@ export default function App() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="px-6 py-4"
           >
-            {renderPage()}
+            <Suspense fallback={<PageSkeleton />}>{page}</Suspense>
           </motion.div>
         </AnimatePresence>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, X, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { storage } from '../lib/storage';
+import { createEntityId, storage } from '../lib/storage';
 import { Notification } from '../types';
 import { auth } from '../lib/firebase';
 
@@ -18,7 +18,7 @@ export const NotificationSystem = () => {
 
   const addNotification = (type: Notification['type'], title: string, message: string) => {
     if (!auth.currentUser) return;
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = createEntityId('notification');
     const newNotification: Notification = {
       id,
       uid: auth.currentUser.uid,

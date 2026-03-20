@@ -18,7 +18,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { Lending } from '../types';
-import { storage } from '../lib/storage';
+import { createEntityId, storage, subscribeToStorageSync } from '../lib/storage';
 import { formatDualCurrency } from '../lib/currency';
 import { auth } from '../lib/firebase';
 
@@ -35,7 +35,12 @@ export const LedgerView = () => {
   });
 
   useEffect(() => {
-    setLending(storage.getLending());
+    const syncLending = () => {
+      setLending(storage.getLending());
+    };
+
+    syncLending();
+    return subscribeToStorageSync(syncLending);
   }, []);
 
   const totalReceivables = lending.filter(l => l.type === 'lent').reduce((acc, curr) => acc + curr.amount, 0);
@@ -43,14 +48,13 @@ export const LedgerView = () => {
 
   const handleDeleteEntry = (id: string) => {
     storage.deleteLending(id);
-    setLending(storage.getLending());
   };
 
   const handleAddEntry = () => {
     if (!newEntry.person || !newEntry.amount || !auth.currentUser) return;
     
     const entry: Lending = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: createEntityId('lending'),
       uid: auth.currentUser.uid,
       person: newEntry.person!,
       amount: Number(newEntry.amount),
@@ -61,7 +65,6 @@ export const LedgerView = () => {
     };
 
     storage.saveLending(entry);
-    setLending(storage.getLending());
     setShowAddModal(false);
     setNewEntry({
       type: 'lent',

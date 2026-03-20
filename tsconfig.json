@@ -21,6 +21,16 @@
       ]
     },
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "src",
+    "vite.config.ts",
+    "capacitor.config.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

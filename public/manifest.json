@@ -3,14 +3,10 @@
   "name": "Money Control Pro",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/money/192/192",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "https://picsum.photos/seed/money/512/512",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
