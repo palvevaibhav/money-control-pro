@@ -1,20 +1,66 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Money Control Pro
 
-# Run and deploy your AI Studio app
+Money Control Pro is a Vite + React personal finance app with Google sign-in, local-first transaction tracking, savings goals, notification workflows, and Gemini-powered financial assistance.
 
-This contains everything you need to run your app locally.
+## Production-readiness upgrades included
 
-View your app in AI Studio: https://ai.studio/apps/500077f7-87c9-4fc4-97b5-0fed38de5792
+- Environment-driven Firebase and Gemini configuration with local fallback support.
+- Safer localStorage parsing and cross-component sync events instead of polling/reload-based refreshes.
+- A production-safe service worker strategy that caches the built app shell rather than source files.
 
-## Run Locally
+## Getting started
 
-**Prerequisites:**  Node.js
+### Prerequisites
 
+- Node.js 20+
+- npm 10+
+- A Firebase web app configuration
+- A Gemini API key for AI features
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Install
+
+```bash
+npm install
+cp .env.example .env.local
+```
+
+### Configure environment variables
+
+Populate `.env.local` with your own values:
+
+- `VITE_GEMINI_API_KEY`
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_MEASUREMENT_ID`
+- `VITE_FIREBASE_DATABASE_ID`
+
+> The repository still supports `firebase-applet-config.json` as a fallback to preserve current local behavior, but production deployments should rely on environment variables.
+
+## Available scripts
+
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run preview
+```
+
+## Deployment checklist
+
+Before deploying, confirm:
+
+1. All `VITE_*` environment variables are configured in the hosting platform.
+2. Firebase Authentication authorized domains include your production URL.
+3. Firestore rules are configured for your expected user access pattern.
+4. `npm run lint` and `npm run build` pass in CI.
+5. Service worker caching has been validated after a fresh deploy.
+
+## Notes
+
+- AI features fail gracefully when the Gemini key is not configured.
+- App data is stored in the browser via localStorage, scoped by authenticated user ID.
+- For stricter production durability, the next recommended step is migrating transactional data from localStorage to Firestore.

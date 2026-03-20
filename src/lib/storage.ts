@@ -1,4 +1,4 @@
-import { Transaction, Goal, Lending, UserStats, Notification } from '../types';
+import { Goal, Lending, Notification, Transaction, UserStats } from '../types';
 import { auth } from './firebase';
 
 const STORAGE_KEYS = {
@@ -8,171 +8,259 @@ const STORAGE_KEYS = {
   STATS: 'mcp_stats',
   SETTINGS: 'mcp_settings',
   NOTIFICATIONS: 'mcp_notifications',
-};
+} as const;
+
+const STORAGE_SYNC_EVENT = 'mcp:storage-sync';
 
 export interface AppSettings {
   currency: 'USD' | 'INR' | 'DUAL';
 }
 
+const DEFAULT_SETTINGS: AppSettings = {
+  currency: 'DUAL',
+};
+
+const DEFAULT_STATS: UserStats = {
+  level: 0,
+  xp: 0,
+  nextLevelXp: 1000,
+  streak: 0,
+  healthScore: 0,
+  dnaInsights: [
+    'Your financial DNA is currently a blank slate. Start tracking to generate insights.',
+    'System ready for architectural configuration.',
+  ],
+  netWealth: 0,
+  monthlyChange: 0,
+  liquidAssets: 0,
+  stakedInvested: 0,
+};
+
+function isBrowser() {
+  return typeof window !== 'undefined';
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  if (!isBrowser()) return fallback;
+
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return fallback;
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    console.warn(`Invalid localStorage payload for ${key}. Resetting to fallback.`, error);
+    window.localStorage.removeItem(key);
+    return fallback;
+  }
+}
+
+function writeJson(key: string, value: unknown) {
+  if (!isBrowser()) return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+  emitStorageSync();
+}
+
+function getCurrentUid() {
+  return auth.currentUser?.uid;
+}
+
+function emitStorageSync() {
+  if (!isBrowser()) return;
+  window.dispatchEvent(new CustomEvent(STORAGE_SYNC_EVENT));
+}
+
+function createId(prefix: string) {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}_${Math.random().toString(36).slice(2, 11)}`;
+}
+
+export function subscribeToStorageSync(callback: () => void) {
+  if (!isBrowser()) return () => undefined;
+
+  window.addEventListener(STORAGE_SYNC_EVENT, callback);
+  window.addEventListener('storage', callback);
+
+  return () => {
+    window.removeEventListener(STORAGE_SYNC_EVENT, callback);
+    window.removeEventListener('storage', callback);
+  };
+}
+
+export function createEntityId(prefix: string) {
+  return createId(prefix);
+}
+
 export const storage = {
-  getSettings: (): AppSettings => {
-    const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return data ? JSON.parse(data) : { currency: 'DUAL' };
-  },
+  getSettings: (): AppSettings => readJson(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS),
   saveSettings: (settings: AppSettings) => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    writeJson(STORAGE_KEYS.SETTINGS, settings);
   },
+
   getTransactions: (): Transaction[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-    const list: Transaction[] = data ? JSON.parse(data) : [];
-    return list.filter(t => t.uid === auth.currentUser?.uid);
+    const uid = getCurrentUid();
+    const list = readJson<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
+    return uid ? list.filter((transaction) => transaction.uid === uid) : [];
   },
-  saveTransaction: (t: Transaction) => {
-    const data = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-    const list = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify([t, ...list]));
+  saveTransaction: (transaction: Transaction) => {
+    const list = readJson<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
+    writeJson(STORAGE_KEYS.TRANSACTIONS, [transaction, ...list]);
   },
   deleteTransaction: (id: string) => {
-    const data = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-    const list: Transaction[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(list.filter(t => t.id !== id)));
+    const list = readJson<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
+    writeJson(
+      STORAGE_KEYS.TRANSACTIONS,
+      list.filter((transaction) => transaction.id !== id),
+    );
   },
-  
+
   getGoals: (): Goal[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.GOALS);
-    const list: Goal[] = data ? JSON.parse(data) : [];
-    return list.filter(g => g.uid === auth.currentUser?.uid);
+    const uid = getCurrentUid();
+    const list = readJson<Goal[]>(STORAGE_KEYS.GOALS, []);
+    return uid ? list.filter((goal) => goal.uid === uid) : [];
   },
-  saveGoal: (g: Goal) => {
-    const data = localStorage.getItem(STORAGE_KEYS.GOALS);
-    const list = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify([...list, g]));
+  saveGoal: (goal: Goal) => {
+    const list = readJson<Goal[]>(STORAGE_KEYS.GOALS, []);
+    writeJson(STORAGE_KEYS.GOALS, [...list, goal]);
   },
   updateGoal: (id: string, amount: number) => {
-    const data = localStorage.getItem(STORAGE_KEYS.GOALS);
-    const list: Goal[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(list.map(g => g.id === id ? { ...g, currentAmount: g.currentAmount + amount } : g)));
+    const list = readJson<Goal[]>(STORAGE_KEYS.GOALS, []);
+    writeJson(
+      STORAGE_KEYS.GOALS,
+      list.map((goal) =>
+        goal.id === id
+          ? { ...goal, currentAmount: Math.min(goal.targetAmount, goal.currentAmount + amount) }
+          : goal,
+      ),
+    );
   },
   deleteGoal: (id: string) => {
-    const data = localStorage.getItem(STORAGE_KEYS.GOALS);
-    const list: Goal[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(list.filter(g => g.id !== id)));
+    const list = readJson<Goal[]>(STORAGE_KEYS.GOALS, []);
+    writeJson(
+      STORAGE_KEYS.GOALS,
+      list.filter((goal) => goal.id !== id),
+    );
   },
 
   getLending: (): Lending[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.LENDING);
-    const list: Lending[] = data ? JSON.parse(data) : [];
-    return list.filter(l => l.uid === auth.currentUser?.uid);
+    const uid = getCurrentUid();
+    const list = readJson<Lending[]>(STORAGE_KEYS.LENDING, []);
+    return uid ? list.filter((entry) => entry.uid === uid) : [];
   },
-  saveLending: (l: Lending) => {
-    const data = localStorage.getItem(STORAGE_KEYS.LENDING);
-    const list = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.LENDING, JSON.stringify([l, ...list]));
+  saveLending: (entry: Lending) => {
+    const list = readJson<Lending[]>(STORAGE_KEYS.LENDING, []);
+    writeJson(STORAGE_KEYS.LENDING, [entry, ...list]);
   },
   deleteLending: (id: string) => {
-    const data = localStorage.getItem(STORAGE_KEYS.LENDING);
-    const list: Lending[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.LENDING, JSON.stringify(list.filter(l => l.id !== id)));
+    const list = readJson<Lending[]>(STORAGE_KEYS.LENDING, []);
+    writeJson(
+      STORAGE_KEYS.LENDING,
+      list.filter((entry) => entry.id !== id),
+    );
   },
 
   getStats: (): UserStats => {
-    const data = localStorage.getItem(STORAGE_KEYS.STATS);
-    const statsMap: Record<string, UserStats> = data ? JSON.parse(data) : {};
-    const uid = auth.currentUser?.uid;
-    
+    const statsMap = readJson<Record<string, UserStats>>(STORAGE_KEYS.STATS, {});
+    const uid = getCurrentUid();
+
     if (uid && statsMap[uid]) {
       return statsMap[uid];
     }
 
-    return {
-      level: 0,
-      xp: 0,
-      nextLevelXp: 1000,
-      streak: 0,
-      healthScore: 0,
-      dnaInsights: [
-        "Your financial DNA is currently a blank slate. Start tracking to generate insights.",
-        "System ready for architectural configuration."
-      ],
-      netWealth: 0,
-      monthlyChange: 0,
-      liquidAssets: 0,
-      stakedInvested: 0
-    };
+    return DEFAULT_STATS;
   },
   saveStats: (stats: UserStats) => {
-    const data = localStorage.getItem(STORAGE_KEYS.STATS);
-    const statsMap: Record<string, UserStats> = data ? JSON.parse(data) : {};
-    const uid = auth.currentUser?.uid;
-    if (uid) {
-      statsMap[uid] = stats;
-      localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(statsMap));
-    }
-  },
-  getNotifications: (): Notification[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    const list: Notification[] = data ? JSON.parse(data) : [];
-    return list.filter(n => n.uid === auth.currentUser?.uid);
-  },
-  saveNotification: (n: Notification) => {
-    const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    const list = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([n, ...list]));
-  },
-  markNotificationAsRead: (id: string) => {
-    const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    const list: Notification[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(list.map(n => n.id === id ? { ...n, read: true } : n)));
-  },
-  markAllNotificationsAsRead: () => {
-    const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    const list: Notification[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(list.map(n => ({ ...n, read: true }))));
-  },
-  deleteNotification: (id: string) => {
-    const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    const list: Notification[] = data ? JSON.parse(data) : [];
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(list.filter(n => n.id !== id)));
-  },
-  clearUserData: () => {
-    const uid = auth.currentUser?.uid;
+    const uid = getCurrentUid();
     if (!uid) return;
 
-    const transactions = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-    if (transactions) {
-      const list: Transaction[] = JSON.parse(transactions);
-      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(list.filter(t => t.uid !== uid)));
-    }
+    const statsMap = readJson<Record<string, UserStats>>(STORAGE_KEYS.STATS, {});
+    writeJson(STORAGE_KEYS.STATS, {
+      ...statsMap,
+      [uid]: stats,
+    });
+  },
 
-    const goals = localStorage.getItem(STORAGE_KEYS.GOALS);
-    if (goals) {
-      const list: Goal[] = JSON.parse(goals);
-      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(list.filter(g => g.uid !== uid)));
-    }
+  getNotifications: (): Notification[] => {
+    const uid = getCurrentUid();
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    return uid ? list.filter((notification) => notification.uid === uid) : [];
+  },
+  saveNotification: (notification: Notification) => {
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(STORAGE_KEYS.NOTIFICATIONS, [notification, ...list]);
+  },
+  markNotificationAsRead: (id: string) => {
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(
+      STORAGE_KEYS.NOTIFICATIONS,
+      list.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification,
+      ),
+    );
+  },
+  markAllNotificationsAsRead: () => {
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(
+      STORAGE_KEYS.NOTIFICATIONS,
+      list.map((notification) => ({ ...notification, read: true })),
+    );
+  },
+  deleteNotification: (id: string) => {
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(
+      STORAGE_KEYS.NOTIFICATIONS,
+      list.filter((notification) => notification.id !== id),
+    );
+  },
+  clearNotificationsForCurrentUser: () => {
+    const uid = getCurrentUid();
+    if (!uid) return;
 
-    const lending = localStorage.getItem(STORAGE_KEYS.LENDING);
-    if (lending) {
-      const list: Lending[] = JSON.parse(lending);
-      localStorage.setItem(STORAGE_KEYS.LENDING, JSON.stringify(list.filter(l => l.uid !== uid)));
-    }
+    const list = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(
+      STORAGE_KEYS.NOTIFICATIONS,
+      list.filter((notification) => notification.uid !== uid),
+    );
+  },
 
-    const notifications = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    if (notifications) {
-      const list: Notification[] = JSON.parse(notifications);
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(list.filter(n => n.uid !== uid)));
-    }
+  clearUserData: () => {
+    const uid = getCurrentUid();
+    if (!uid || !isBrowser()) return;
 
-    const stats = localStorage.getItem(STORAGE_KEYS.STATS);
-    if (stats) {
-      const statsMap: Record<string, UserStats> = JSON.parse(stats);
-      delete statsMap[uid];
-      localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(statsMap));
-    }
+    const transactions = readJson<Transaction[]>(STORAGE_KEYS.TRANSACTIONS, []);
+    writeJson(
+      STORAGE_KEYS.TRANSACTIONS,
+      transactions.filter((transaction) => transaction.uid !== uid),
+    );
 
-    window.location.reload();
+    const goals = readJson<Goal[]>(STORAGE_KEYS.GOALS, []);
+    writeJson(
+      STORAGE_KEYS.GOALS,
+      goals.filter((goal) => goal.uid !== uid),
+    );
+
+    const lending = readJson<Lending[]>(STORAGE_KEYS.LENDING, []);
+    writeJson(
+      STORAGE_KEYS.LENDING,
+      lending.filter((entry) => entry.uid !== uid),
+    );
+
+    const notifications = readJson<Notification[]>(STORAGE_KEYS.NOTIFICATIONS, []);
+    writeJson(
+      STORAGE_KEYS.NOTIFICATIONS,
+      notifications.filter((notification) => notification.uid !== uid),
+    );
+
+    const statsMap = readJson<Record<string, UserStats>>(STORAGE_KEYS.STATS, {});
+    delete statsMap[uid];
+    writeJson(STORAGE_KEYS.STATS, statsMap);
   },
   clearAllData: () => {
-    localStorage.clear();
-    window.location.reload();
-  }
+    if (!isBrowser()) return;
+    window.localStorage.clear();
+    emitStorageSync();
+  },
 };
