@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "user": {
+      "title": "User Profile",
+      "description": "User profile and financial stats",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "stats": { "type": "object" }
+      },
+      "required": ["uid", "email"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Income or expense record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["expense", "income"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uid", "amount", "type", "date"]
+    },
+    "goal": {
+      "title": "Savings Goal",
+      "description": "Financial target to save for",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "category": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["id", "uid", "name", "targetAmount", "currentAmount"]
+    },
+    "lending": {
+      "title": "Lending Record",
+      "description": "Money lent or borrowed",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "person": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["lent", "borrowed"] },
+        "date": { "type": "string", "format": "date" },
+        "interestRate": { "type": "number" },
+        "dueDate": { "type": "string" }
+      },
+      "required": ["id", "uid", "person", "amount", "type", "date"]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "System alerts and insights",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "warning", "success"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["id", "uid", "title", "message", "timestamp", "read"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "user",
+      "description": "User profile data"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "transaction",
+      "description": "User transactions"
+    },
+    "/goals/{goalId}": {
+      "schema": "goal",
+      "description": "User savings goals"
+    },
+    "/lending/{lendingId}": {
+      "schema": "lending",
+      "description": "User lending/borrowing records"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "notification",
+      "description": "User notifications"
+    }
+  }
+}

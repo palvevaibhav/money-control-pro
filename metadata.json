@@ -1,0 +1,5 @@
+{
+  "name": "Money Control Pro",
+  "description": "AI-Powered Personal Finance Super App with Financial DNA tracking and smart budgeting.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

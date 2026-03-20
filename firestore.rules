@@ -1,0 +1,200 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - stats: map (optional)
+    //
+    // Collection: transactions
+    // Document ID: {transactionId}
+    // Fields:
+    //   - id: string (required)
+    //   - uid: string (required, immutable)
+    //   - amount: number (required, positive)
+    //   - category: string (required)
+    //   - description: string (optional)
+    //   - type: string (required, enum: ['expense', 'income'])
+    //   - date: string (required, ISO 8601)
+    //
+    // Collection: goals
+    // Document ID: {goalId}
+    // Fields:
+    //   - id: string (required)
+    //   - uid: string (required, immutable)
+    //   - name: string (required, max 50 chars)
+    //   - targetAmount: number (required, positive)
+    //   - currentAmount: number (required, non-negative)
+    //   - category: string (optional)
+    //   - icon: string (optional)
+    //
+    // Collection: lending
+    // Document ID: {lendingId}
+    // Fields:
+    //   - id: string (required)
+    //   - uid: string (required, immutable)
+    //   - person: string (required, max 50 chars)
+    //   - amount: number (required, positive)
+    //   - type: string (required, enum: ['lent', 'borrowed'])
+    //   - date: string (required, ISO 8601)
+    //   - interestRate: number (optional, non-negative)
+    //   - dueDate: string (optional)
+    //
+    // Collection: notifications
+    // Document ID: {notificationId}
+    // Fields:
+    //   - id: string (required)
+    //   - uid: string (required, immutable)
+    //   - type: string (required, enum: ['info', 'warning', 'success'])
+    //   - title: string (required, max 100 chars)
+    //   - message: string (required, max 500 chars)
+    //   - timestamp: string (required)
+    //   - read: bool (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'stats']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (data.displayName == null || (data.displayName is string && data.displayName.size() < 100)) &&
+             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() < 500));
+    }
+
+    function isValidTransaction(data) {
+      return hasOnlyAllowedFields(['id', 'uid', 'amount', 'category', 'description', 'type', 'date']) &&
+             data.id is string && data.id.size() < 50 &&
+             data.uid == request.auth.uid &&
+             data.amount is number && data.amount > 0 &&
+             data.category is string && data.category.size() < 50 &&
+             (data.description == null || (data.description is string && data.description.size() < 200)) &&
+             data.type in ['expense', 'income'] &&
+             isValidDateString(data.date);
+    }
+
+    function isValidGoal(data) {
+      return hasOnlyAllowedFields(['id', 'uid', 'name', 'targetAmount', 'currentAmount', 'category', 'icon']) &&
+             data.id is string && data.id.size() < 50 &&
+             data.uid == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.targetAmount is number && data.targetAmount > 0 &&
+             data.currentAmount is number && data.currentAmount >= 0 &&
+             (data.category == null || (data.category is string && data.category.size() < 50)) &&
+             (data.icon == null || (data.icon is string && data.icon.size() < 10));
+    }
+
+    function isValidLending(data) {
+      return hasOnlyAllowedFields(['id', 'uid', 'person', 'amount', 'type', 'date', 'interestRate', 'dueDate']) &&
+             data.id is string && data.id.size() < 50 &&
+             data.uid == request.auth.uid &&
+             data.person is string && data.person.size() > 0 && data.person.size() < 100 &&
+             data.amount is number && data.amount > 0 &&
+             data.type in ['lent', 'borrowed'] &&
+             isValidDateString(data.date) &&
+             (data.interestRate == null || (data.interestRate is number && data.interestRate >= 0)) &&
+             (data.dueDate == null || (data.dueDate is string && data.dueDate.size() < 50));
+    }
+
+    function isValidNotification(data) {
+      return hasOnlyAllowedFields(['id', 'uid', 'type', 'title', 'message', 'timestamp', 'read']) &&
+             data.id is string && data.id.size() < 50 &&
+             data.uid == request.auth.uid &&
+             data.type in ['info', 'warning', 'success'] &&
+             data.title is string && data.title.size() < 100 &&
+             data.message is string && data.message.size() < 1000 &&
+             data.timestamp is string &&
+             data.read is bool;
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data) && uidNotModified();
+      allow delete: if isOwner(uid);
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
+      allow update: if isDocOwner() && isValidTransaction(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner();
+    }
+
+    match /goals/{goalId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidGoal(request.resource.data);
+      allow update: if isDocOwner() && isValidGoal(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner();
+    }
+
+    match /lending/{lendingId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidLending(request.resource.data);
+      allow update: if isDocOwner() && isValidLending(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+      allow update: if isDocOwner() && isValidNotification(request.resource.data) && uidNotModified();
+      allow delete: if isDocOwner();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #44f3a9;
+  --color-primary-container: #00d68f;
+  --color-on-primary: #003822;
+  --color-on-primary-container: #005737;
+  
+  --color-secondary: #4edea3;
+  --color-secondary-container: #00a572;
+  --color-on-secondary: #003824;
+  
+  --color-surface: #111319;
+  --color-surface-container: #1e1f26;
+  --color-surface-container-high: #282a30;
+  --color-surface-container-low: #191b22;
+  --color-surface-container-lowest: #0c0e14;
+  --color-surface-container-highest: #33343b;
+  
+  --color-on-surface: #e2e2eb;
+  --color-on-surface-variant: #bacbbe;
+  
+  --color-outline: #859589;
+  --color-outline-variant: #3c4a41;
+}
+
+@layer base {
+  html, body, #root {
+    @apply h-full overflow-hidden bg-surface text-on-surface antialiased select-none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+.app-container {
+  @apply flex flex-col h-full w-full max-w-md mx-auto relative bg-surface shadow-2xl;
+}
+
+.scroll-container {
+  @apply flex-1 overflow-y-auto overflow-x-hidden scroll-smooth;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  padding-top: calc(64px + env(safe-area-inset-top));
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.orb-glow {
+  box-shadow: 0 0 60px -15px var(--color-primary);
+}
+
+.dna-gradient {
+  background: radial-gradient(circle at center, rgba(68, 243, 169, 0.15) 0%, rgba(17, 19, 25, 0) 70%);
+}
