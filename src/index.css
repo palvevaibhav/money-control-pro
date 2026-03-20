@@ -32,11 +32,20 @@
     @apply h-full overflow-hidden bg-surface text-on-surface antialiased select-none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+
+  body.native-platform {
+    @apply max-w-none;
   }
 }
 
 .app-container {
   @apply flex flex-col h-full w-full max-w-md mx-auto relative bg-surface shadow-2xl;
+}
+
+.native-platform .app-container {
+  @apply max-w-none shadow-none;
 }
 
 .scroll-container {
@@ -45,6 +54,7 @@
   padding-top: calc(64px + env(safe-area-inset-top));
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overscroll-behavior: contain;
 }
 
 .scroll-container::-webkit-scrollbar {

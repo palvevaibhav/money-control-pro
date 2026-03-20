@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+# Avoid Codex UI PR failures on binary assets
+android/gradle/wrapper/*.jar
+android/app/src/main/res/drawable*/splash.png
+android/app/src/main/res/mipmap-*/ic_launcher*.png
+ios/App/App/Assets.xcassets/AppIcon.appiconset/*.png
+ios/App/App/Assets.xcassets/Splash.imageset/*.png

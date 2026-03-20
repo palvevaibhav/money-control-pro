@@ -6,13 +6,6 @@ import { auth, onAuthStateChanged } from './lib/firebase';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
-import { Dashboard } from './components/Dashboard';
-import { ExpensesPage } from './components/ExpensesPage';
-import { AIDNAPage } from './components/AIDNAPage';
-import { SovereignAIChat } from './components/SovereignAIChat';
-import { VaultPage } from './components/VaultPage';
-import { ProfilePage } from './components/ProfilePage';
-import { NotificationsPage } from './components/NotificationsPage';
 import { NotificationSystem } from './components/NotificationSystem';
 import { SplashScreen } from './components/SplashScreen';
 
@@ -44,6 +37,9 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [securityPreferences, setSecurityPreferences] = useState<SecurityPreferences>(
+    storage.getSecurityPreferences(),
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
@@ -52,6 +48,15 @@ export default function App() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const syncSecurityPreferences = () => {
+      setSecurityPreferences(storage.getSecurityPreferences());
+    };
+
+    syncSecurityPreferences();
+    return subscribeToStorageSync(syncSecurityPreferences);
   }, []);
 
   if (loading) {
@@ -73,7 +78,7 @@ export default function App() {
     );
   }
 
-  const renderPage = () => {
+  const page = useMemo(() => {
     switch (activeTab) {
       case 'home':
         return <Dashboard setActiveTab={setActiveTab} />;
@@ -92,7 +97,7 @@ export default function App() {
       default:
         return <Dashboard setActiveTab={setActiveTab} />;
     }
-  };
+  }, [activeTab]);
 
   return (
     <div className="app-container">
@@ -114,7 +119,7 @@ export default function App() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="px-6 py-4"
           >
-            {renderPage()}
+            <Suspense fallback={<PageSkeleton />}>{page}</Suspense>
           </motion.div>
         </AnimatePresence>
       </div>

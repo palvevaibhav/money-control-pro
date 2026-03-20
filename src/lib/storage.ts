@@ -1,5 +1,6 @@
 import { Goal, Lending, Notification, Transaction, UserStats } from '../types';
 import { auth } from './firebase';
+import { appendIntegrityEvent, clearSecurityArtifactsForCurrentUser } from './security';
 
 const STORAGE_KEYS = {
   TRANSACTIONS: 'mcp_transactions',
