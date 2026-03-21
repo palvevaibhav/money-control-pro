@@ -14,7 +14,11 @@
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npm run cap:sync && npx cap open android",
     "mobile:ios": "npm run cap:sync && npm run cap:open:ios",
-    "mobile:android": "npm run cap:sync && npm run cap:open:android"
+    "mobile:android": "npm run cap:sync && npm run cap:open:android",
+    "dev:full": "node scripts/full-dev.js",
+    "build:apk": "scripts/build-apk.bat",
+    "deploy": "./scripts/deploy.sh",
+    "generate:skills": "node scripts/generate-skills.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

@@ -1,0 +1,12 @@
+{
+  "generated_at": "2024-12-19T10:00:00.000Z",
+  "total_skills": 1,
+  "skills": [
+    {
+      "name": "build-apk",
+      "description": "Automates the process of building Android APK for the Money Control Pro application. This skill handles the complete workflow from dependency installation to APK generation, ensuring all prerequisites are met and providing clear error messages.",
+      "file": "skills/.curated/build-apk/SKILL.md",
+      "metadata": {}
+    }
+  ]
+}
