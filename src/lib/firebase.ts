@@ -7,7 +7,13 @@ import {
   onAuthStateChanged,
   signInWithPopup,
   signInWithRedirect,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   signOut,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
 import {
   collection,
@@ -47,6 +53,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app, firestoreDatabaseId);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+export { sendEmailVerification, createUserWithEmailAndPassword, updateProfile };
 
 async function testConnection() {
   try {
@@ -79,4 +86,7 @@ export {
   updateDoc,
   where,
   getRedirectResult,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  signInWithEmailAndPassword
 };

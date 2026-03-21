@@ -6,6 +6,7 @@ import { auth, getRedirectResult, onAuthStateChanged } from './lib/firebase';
 import { storage, subscribeToStorageSync } from './lib/storage';
 import type { SecurityPreferences } from './lib/storage';
 import { LoginPage } from './components/LoginPage';
+import { SignupPage } from './components/SignupPage';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { NotificationSystem } from './components/NotificationSystem';
@@ -28,15 +29,12 @@ const PageSkeleton = () => (
 
 const StatusBar = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-
   useEffect(() => {
     const timer = window.setInterval(() => {
       setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }, 1000);
-
     return () => window.clearInterval(timer);
   }, []);
-
   return (
     <div className="fixed top-0 left-0 w-full h-6 px-6 flex justify-between items-center text-[10px] font-bold z-[60] bg-surface/80 backdrop-blur-sm safe-top">
       <span className="text-on-surface">{time}</span>
@@ -58,12 +56,15 @@ export default function App() {
     storage.getSecurityPreferences(),
   );
 
+  // Toggle login/signup
+  const [showSignup, setShowSignup] = useState(false);
+
+  // Track Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -71,27 +72,31 @@ export default function App() {
     const checkRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result?.user) {
-          setUser(result.user);
-        }
+        if (result?.user) setUser(result.user);
       } catch (error) {
         console.error('Redirect result error:', error);
       }
     };
-
     void checkRedirect();
   }, []);
 
   useEffect(() => {
-    const syncSecurityPreferences = () => {
-      setSecurityPreferences(storage.getSecurityPreferences());
-    };
-
+    const syncSecurityPreferences = () => setSecurityPreferences(storage.getSecurityPreferences());
     syncSecurityPreferences();
     return subscribeToStorageSync(syncSecurityPreferences);
   }, []);
 
   const page = useMemo(() => {
+    if (!user) {
+      // Show Login or Signup page
+      return showSignup ? (
+        <SignupPage onSignupSwitch={() => setShowSignup(false)} />
+      ) : (
+        <LoginPage onSignupSwitch={() => setShowSignup(true)} />
+      );
+    }
+
+    // User is logged in → show dashboard/tab pages
     switch (activeTab) {
       case 'home':
         return <Dashboard setActiveTab={setActiveTab} />;
@@ -110,18 +115,9 @@ export default function App() {
       default:
         return <Dashboard setActiveTab={setActiveTab} />;
     }
-  }, [activeTab]);
+  }, [activeTab, user, showSignup]);
 
-  if (!user) {
-    return (
-      <div className="app-container">
-        <AnimatePresence>
-          {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
-        </AnimatePresence>
-        {!showSplash && <LoginPage />}
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="app-container">
@@ -129,14 +125,14 @@ export default function App() {
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       </AnimatePresence>
 
-      <StatusBar />
+      {user && <StatusBar />}
       <Header setActiveTab={setActiveTab} />
       <NotificationSystem />
 
       <div className="scroll-container">
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
+            key={user ? activeTab : showSignup ? 'signup' : 'login'}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -148,7 +144,7 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      {user && <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />}
     </div>
   );
 }
