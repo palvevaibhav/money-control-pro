@@ -1,9 +1,12 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
 import {
   getAuth,
   GoogleAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
 } from 'firebase/auth';
 import {
@@ -23,6 +26,9 @@ import {
 } from 'firebase/firestore';
 import fallbackFirebaseConfig from '../../firebase-applet-config.json';
 
+
+
+// Fallback (not used while hardcoded is active but kept for reference)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fallbackFirebaseConfig.apiKey,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fallbackFirebaseConfig.authDomain,
@@ -34,10 +40,9 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || fallbackFirebaseConfig.measurementId,
 };
 
+const app = initializeApp(firebaseConfig);
 const firestoreDatabaseId =
   import.meta.env.VITE_FIREBASE_DATABASE_ID || fallbackFirebaseConfig.firestoreDatabaseId;
-
-const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firestoreDatabaseId);
 export const googleProvider = new GoogleAuthProvider();
@@ -69,7 +74,9 @@ export {
   query,
   setDoc,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateDoc,
   where,
+  getRedirectResult,
 };

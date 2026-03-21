@@ -12,8 +12,14 @@ export const LoginPage = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (nativePlatform) {
+        // Some native environments have popup restrictions; redirect is more reliable
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (error) {
       console.error('Login error:', error);
       setError(error instanceof Error ? error.message : 'Failed to sign in with Google');

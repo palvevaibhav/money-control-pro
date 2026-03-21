@@ -1,4 +1,4 @@
-import { Goal, Lending, Notification, Transaction, UserStats } from '../types';
+import { Goal, Lending, Notification, SecurityPreferences, Transaction, UserStats } from '../types';
 import { auth } from './firebase';
 import { appendIntegrityEvent, clearSecurityArtifactsForCurrentUser } from './security';
 
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   STATS: 'mcp_stats',
   SETTINGS: 'mcp_settings',
   NOTIFICATIONS: 'mcp_notifications',
+  SECURITY_PREFERENCES: 'mcp_security_preferences',
 } as const;
 
 const STORAGE_SYNC_EVENT = 'mcp:storage-sync';
@@ -35,6 +36,10 @@ const DEFAULT_STATS: UserStats = {
   monthlyChange: 0,
   liquidAssets: 0,
   stakedInvested: 0,
+};
+
+const DEFAULT_SECURITY_PREFERENCES: SecurityPreferences = {
+  biometricLockEnabled: false,
 };
 
 function isBrowser() {
@@ -264,4 +269,14 @@ export const storage = {
     window.localStorage.clear();
     emitStorageSync();
   },
+
+  getSecurityPreferences: (): SecurityPreferences => {
+    return readJson(STORAGE_KEYS.SECURITY_PREFERENCES, DEFAULT_SECURITY_PREFERENCES);
+  },
+  saveSecurityPreferences: (preferences: SecurityPreferences) => {
+    writeJson(STORAGE_KEYS.SECURITY_PREFERENCES, preferences);
+  },
 };
+
+export type { SecurityPreferences } from '../types';
+

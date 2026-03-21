@@ -1,13 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { Battery, Signal, Wifi } from 'lucide-react';
-import { auth, onAuthStateChanged } from './lib/firebase';
+import { auth, getRedirectResult, onAuthStateChanged } from './lib/firebase';
+import { storage, subscribeToStorageSync } from './lib/storage';
+import type { SecurityPreferences } from './lib/storage';
 import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { NotificationSystem } from './components/NotificationSystem';
 import { SplashScreen } from './components/SplashScreen';
+import { Dashboard } from './components/Dashboard';
+import { ExpensesPage } from './components/ExpensesPage';
+import { AIDNAPage } from './components/AIDNAPage';
+import { SovereignAIChat } from './components/SovereignAIChat';
+import { VaultPage } from './components/VaultPage';
+import { ProfilePage } from './components/ProfilePage';
+import { NotificationsPage } from './components/NotificationsPage';
+
+const PageSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+    <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+    <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+  </div>
+);
 
 const StatusBar = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -51,6 +68,21 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          setUser(result.user);
+        }
+      } catch (error) {
+        console.error('Redirect result error:', error);
+      }
+    };
+
+    void checkRedirect();
+  }, []);
+
+  useEffect(() => {
     const syncSecurityPreferences = () => {
       setSecurityPreferences(storage.getSecurityPreferences());
     };
@@ -58,25 +90,6 @@ export default function App() {
     syncSecurityPreferences();
     return subscribeToStorageSync(syncSecurityPreferences);
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="app-container">
-        <AnimatePresence>
-          {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
-        </AnimatePresence>
-        {!showSplash && <LoginPage />}
-      </div>
-    );
-  }
 
   const page = useMemo(() => {
     switch (activeTab) {
@@ -98,6 +111,17 @@ export default function App() {
         return <Dashboard setActiveTab={setActiveTab} />;
     }
   }, [activeTab]);
+
+  if (!user) {
+    return (
+      <div className="app-container">
+        <AnimatePresence>
+          {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+        </AnimatePresence>
+        {!showSplash && <LoginPage />}
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">

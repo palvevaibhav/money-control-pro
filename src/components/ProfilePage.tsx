@@ -27,7 +27,8 @@ import {
   verifyCurrentUserVaultSeal,
   verifyIntegrityChainForCurrentUser,
 } from '../lib/security';
-import { AppSettings, SecurityPreferences, storage } from '../lib/storage';
+import { AppSettings, storage } from '../lib/storage';
+import type { SecurityPreferences } from '../lib/storage';
 
 export const ProfilePage = () => {
   const [settings, setSettings] = useState<AppSettings>(storage.getSettings());

@@ -6,9 +6,7 @@ import { analyzeReceipt } from '../lib/ai';
 import { createEntityId, storage } from '../lib/storage';
 import { Transaction } from '../types';
 import { auth } from '../lib/firebase';
-import { createEntityId, storage } from '../lib/storage';
 import { isNativePlatform } from '../lib/native';
-import { Transaction } from '../types';
 
 interface CameraModalProps {
   isOpen: boolean;
