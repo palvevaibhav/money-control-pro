@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "nvm use 20 && vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -12,7 +12,7 @@
     "build:mobile": "vite build",
     "cap:sync": "npm run build:mobile && npx cap sync",
     "cap:open:ios": "npx cap open ios",
-    "cap:open:android": "npx cap open android",
+    "cap:open:android": "npm run cap:sync && npx cap open android",
     "mobile:ios": "npm run cap:sync && npm run cap:open:ios",
     "mobile:android": "npm run cap:sync && npm run cap:open:android"
   },

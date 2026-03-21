@@ -12,3 +12,27 @@ android/app/src/main/res/drawable*/splash.png
 android/app/src/main/res/mipmap-*/ic_launcher*.png
 ios/App/App/Assets.xcassets/AppIcon.appiconset/*.png
 ios/App/App/Assets.xcassets/Splash.imageset/*.png
+android/app/src/main/res/drawable*/splash.png
+android/app/src/main/res/mipmap-*/ic_launcher*.png
+ios/App/App/Assets.xcassets/AppIcon.appiconset/*.png
+ios/App/App/Assets.xcassets/Splash.imageset/*.png  
+android/app
+android/gradle/wrapper/gradle-wrapper.jar
+# iOS
+ios/Pods/
+ios/Podfile.lock
+ios/.DS_Store
+ios/Flutter/Flutter.podspec
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.modulemap
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/captures/
+android/*.jks
+android/*.keystore
+android/app/release/
+android/build/
+outputs/
