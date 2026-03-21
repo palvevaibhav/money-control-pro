@@ -1,11 +1,143 @@
 {
   "generated_at": "2024-12-19T10:00:00.000Z",
-  "total_skills": 1,
+  "total_skills": 22,
   "skills": [
     {
       "name": "build-apk",
       "description": "Automates the process of building Android APK for the Money Control Pro application. This skill handles the complete workflow from dependency installation to APK generation, ensuring all prerequisites are met and providing clear error messages.",
       "file": "skills/.curated/build-apk/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "test-unit",
+      "description": "Executes comprehensive unit tests for the Money Control Pro application, ensuring code quality and preventing regressions. This skill handles test discovery, execution, and reporting with detailed coverage analysis.",
+      "file": "skills/.curated/test-unit/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "lint-code",
+      "description": "Performs comprehensive code quality analysis using ESLint, TypeScript compiler, and other linting tools to ensure consistent code style and catch potential issues before they reach production.",
+      "file": "skills/.curated/lint-code/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "security-audit",
+      "description": "Conducts comprehensive security analysis of the application, including dependency scanning, code analysis, and vulnerability assessment to ensure the application is secure against common threats.",
+      "file": "skills/.curated/security-audit/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "performance-analyze",
+      "description": "Analyzes application performance including bundle size, runtime performance, memory usage, and loading times to ensure optimal user experience and efficient resource utilization.",
+      "file": "skills/.curated/performance-analyze/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "docs-generate",
+      "description": "Automatically generates comprehensive documentation for the codebase including API documentation, component documentation, and usage guides to maintain up-to-date project documentation.",
+      "file": "skills/.curated/docs-generate/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "database-migrate",
+      "description": "Manages database schema changes and data migrations for Firestore, ensuring smooth transitions between application versions and maintaining data integrity.",
+      "file": "skills/.curated/database-migrate/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "mobile-test",
+      "description": "Executes comprehensive testing for mobile applications including device compatibility, Capacitor plugin testing, and mobile-specific functionality validation.",
+      "file": "skills/.curated/mobile-test/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "ci-cd-pipeline",
+      "description": "Manages continuous integration and deployment pipelines, automating build, test, and deployment processes to ensure reliable and efficient software delivery.",
+      "file": "skills/.curated/ci-cd-pipeline/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "monitor-health",
+      "description": "Monitors application health, performance, and reliability in production, providing real-time insights and alerts for issues affecting user experience.",
+      "file": "skills/.curated/monitor-health/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "dev-workflow",
+      "description": "Manages the complete development workflow including project setup, feature development, testing, and release processes to ensure consistent and efficient development practices.",
+      "file": "skills/.curated/dev-workflow/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "accessibility-check",
+      "description": "Ensures the application is accessible to users with disabilities by checking compliance with WCAG guidelines, screen reader compatibility, and inclusive design principles.",
+      "file": "skills/.curated/accessibility-check/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "i18n-manage",
+      "description": "Manages application internationalization (i18n) including translation management, locale support, and cultural adaptation to provide a localized experience for global users.",
+      "file": "skills/.curated/i18n-manage/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "backup-restore",
+      "description": "Manages data backup and restore operations for user data, ensuring data safety, disaster recovery, and compliance with data retention policies.",
+      "file": "skills/.curated/backup-restore/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "analytics-track",
+      "description": "Implements comprehensive user analytics and behavior tracking to understand user engagement, feature usage, and application performance for data-driven improvements.",
+      "file": "skills/.curated/analytics-track/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "error-track",
+      "description": "Implements comprehensive error tracking and monitoring to capture, analyze, and resolve application errors in real-time, improving application stability and user experience.",
+      "file": "skills/.curated/error-track/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "api-manage",
+      "description": "Manages API endpoints, documentation, versioning, and rate limiting for the application's backend services, ensuring reliable and well-documented API interactions.",
+      "file": "skills/.curated/api-manage/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "code-review",
+      "description": "Facilitates comprehensive code review processes including automated checks, review guidelines, and collaboration tools to ensure code quality and knowledge sharing.",
+      "file": "skills/.curated/code-review/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "deps-manage",
+      "description": "Manages project dependencies including package updates, security patches, license compliance, and dependency analysis to maintain a healthy and secure dependency ecosystem.",
+      "file": "skills/.curated/deps-manage/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "env-manage",
+      "description": "Manages application environments including configuration, secrets, and environment-specific settings to ensure consistent deployment across development, staging, and production.",
+      "file": "skills/.curated/env-manage/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "feature-flags",
+      "description": "Implements feature flag management for controlled feature rollouts, A/B testing, and gradual feature releases to minimize risk and enable data-driven development.",
+      "file": "skills/.curated/feature-flags/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "release-manage",
+      "description": "Manages the complete software release lifecycle including versioning, changelog generation, deployment coordination, and post-release monitoring for reliable software delivery.",
+      "file": "skills/.curated/release-manage/SKILL.md",
+      "metadata": {}
+    },
+    {
+      "name": "collaborate",
+      "description": "Facilitates team collaboration through integrated tools, communication channels, and knowledge sharing to improve team productivity and project coordination.",
+      "file": "skills/.curated/collaborate/SKILL.md",
       "metadata": {}
     }
   ]
