@@ -20,32 +20,52 @@ function getMissingKeyMessage() {
   return 'AI features are unavailable because VITE_GEMINI_API_KEY is not configured.';
 }
 
-export async function getFinancialAdvice(prompt: string) {
+/**
+ * API Gateway for all Gemini AI calls.
+ * Consolidates the request logic so there's only one integration point triggering api calls.
+ */
+async function callAiGateway(requestPayload: any, errorContext: string) {
   const ai = getAiClient();
   if (!ai) {
-    return getMissingKeyMessage();
+    return { error: 'AIClient_Not_Initialized' };
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: `You are an expert financial advisor for Money Control Pro. Provide concise, actionable advice for the following query: ${prompt}` }] }],
-    });
-    return response.text;
+    const response = await ai.models.generateContent(requestPayload);
+    return { data: response };
   } catch (error) {
-    console.error('AI Error:', error);
-    return 'I’m having trouble connecting to my financial brain right now. Please try again later!';
+    console.error(`${errorContext} Error:`, error);
+    return { error };
   }
 }
 
-export async function analyzeReceipt(base64Image: string) {
-  const ai = getAiClient();
-  if (!ai) {
-    return null;
-  }
+export async function getFinancialAdvice(prompt: string) {
+  const result = await callAiGateway(
+    {
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `You are an expert financial advisor for Money Control Pro. Provide concise, actionable advice for the following query: ${prompt}`,
+            },
+          ],
+        },
+      ],
+    },
+    'AI'
+  );
 
-  try {
-    const response = await ai.models.generateContent({
+  if (result.error === 'AIClient_Not_Initialized') return getMissingKeyMessage();
+  if (result.error) return 'I’m having trouble connecting to my financial brain right now. Please try again later!';
+  
+  return result.data.text;
+}
+
+export async function analyzeReceipt(base64Image: string) {
+  const result = await callAiGateway(
+    {
       model: 'gemini-2.5-flash',
       contents: [
         {
@@ -76,12 +96,12 @@ export async function analyzeReceipt(base64Image: string) {
           required: ['amount', 'date', 'category', 'description'],
         },
       },
-    });
-    return JSON.parse(response.text || '{}');
-  } catch (error) {
-    console.error('Receipt Analysis Error:', error);
-    return null;
-  }
+    },
+    'Receipt Analysis'
+  );
+
+  if (result.error) return null;
+  return JSON.parse(result.data.text || '{}');
 }
 
 interface AiFileInput {
@@ -90,34 +110,31 @@ interface AiFileInput {
 }
 
 export async function chatWithAI(prompt: string, files?: AiFileInput[]) {
-  const ai = getAiClient();
-  if (!ai) {
-    return getMissingKeyMessage();
-  }
+  const parts: Array<{ text: string } | { inlineData: AiFileInput }> = [{ text: prompt }];
 
-  try {
-    const parts: Array<{ text: string } | { inlineData: AiFileInput }> = [{ text: prompt }];
-
-    files?.forEach((file) => {
-      parts.push({
-        inlineData: {
-          mimeType: file.mimeType,
-          data: file.data,
-        },
-      });
+  files?.forEach((file) => {
+    parts.push({
+      inlineData: {
+        mimeType: file.mimeType,
+        data: file.data,
+      },
     });
+  });
 
-    const response = await ai.models.generateContent({
+  const result = await callAiGateway(
+    {
       model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts }],
       config: {
         systemInstruction:
           "You are Money Control Pro's AI Assistant. You can analyze financial documents, receipts, and provide advice. Be concise and helpful.",
       },
-    });
-    return response.text;
-  } catch (error) {
-    console.error('AI Chat Error:', error);
-    return 'I encountered an error while processing your request.';
-  }
+    },
+    'AI Chat'
+  );
+
+  if (result.error === 'AIClient_Not_Initialized') return getMissingKeyMessage();
+  if (result.error) return 'I encountered an error while processing your request.';
+
+  return result.data.text;
 }
