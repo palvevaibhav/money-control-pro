@@ -47,6 +47,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+export const firebaseApp = app;
 const firestoreDatabaseId =
   import.meta.env.VITE_FIREBASE_DATABASE_ID || fallbackFirebaseConfig.firestoreDatabaseId;
 export const auth = getAuth(app);

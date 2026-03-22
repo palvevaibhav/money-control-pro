@@ -54,4 +54,10 @@ export interface Notification {
 
 export interface SecurityPreferences {
   biometricLockEnabled: boolean;
+  encryptionEnabled?: boolean;
+  integrityShieldEnabled?: boolean;
+  publicKeyFingerprint?: string;
+  keyPairCreatedAt?: string;
+  lastSealAt?: string;
+  lastIntegrityCheckAt?: string;
 }

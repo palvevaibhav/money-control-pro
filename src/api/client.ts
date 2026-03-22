@@ -2,11 +2,11 @@ import { BrowserAPIGateway, initializeBrowserAPIGateway } from './gateway';
 
 let gatewayInstance: BrowserAPIGateway | null = null;
 
-export function initializeGateway(firebaseApp: any) {
+export function initializeGateway(firebaseApp: unknown, geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY) {
   gatewayInstance = initializeBrowserAPIGateway({
     firebaseApp,
-    geminiApiKey: process.env.REACT_APP_GEMINI_API_KEY,
-    enableLogging: process.env.NODE_ENV === 'development',
+    geminiApiKey,
+    enableLogging: import.meta.env.DEV,
   });
   return gatewayInstance;
 }
