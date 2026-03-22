@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { Battery, Signal, Wifi } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { auth, getRedirectResult, onAuthStateChanged } from './lib/firebase';
 import { storage, subscribeToStorageSync } from './lib/storage';
 import type { SecurityPreferences } from './lib/storage';
@@ -145,6 +146,7 @@ export default function App() {
       </div>
 
       {user && <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />}
+      <Analytics />
     </div>
   );
 }
