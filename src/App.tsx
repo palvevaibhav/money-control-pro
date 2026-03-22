@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { User } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { Battery, Signal, Wifi } from 'lucide-react';
-import { auth, getRedirectResult, onAuthStateChanged } from './lib/firebase';
+import { auth, firebaseApp, getRedirectResult, onAuthStateChanged } from './lib/firebase';
 import { storage, subscribeToStorageSync } from './lib/storage';
 import type { SecurityPreferences } from './lib/storage';
+import { initializeGateway } from './api/client';
 import { LoginPage } from './components/LoginPage';
 import { SignupPage } from './components/SignupPage';
 import { Header } from './components/Header';
@@ -58,6 +59,10 @@ export default function App() {
 
   // Toggle login/signup
   const [showSignup, setShowSignup] = useState(false);
+
+  useEffect(() => {
+    initializeGateway(firebaseApp);
+  }, []);
 
   // Track Firebase auth state
   useEffect(() => {

@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ShieldCheck, Zap, Globe, Smartphone, Mail, Lock, Phone } from 'lucide-react';
-import { auth, googleProvider, signInWithPopup, signInWithPhoneNumber, signInWithEmailAndPassword } from '../lib/firebase';
+import {
+  auth,
+  googleProvider,
+  RecaptchaVerifier,
+  signInWithPopup,
+  signInWithPhoneNumber,
+  signInWithEmailAndPassword,
+} from '../lib/firebase';
 import { isNativePlatform } from '../lib/native';
 
 interface LoginPageProps {
